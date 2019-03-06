@@ -225,6 +225,8 @@ void QTableNodes::drawArrow(QPainter& painter, QPointF& from, QPointF& to)
     // drawing arrow head
     QPolygon arrow;
 
+    painter.setBrush(QBrush(QColor(0, 0, 255, 255)));   // comment to disable triangle filling
+
     arrow << QPoint(0, - ARROW_WIDTH/2)
           << QPoint(ARROW_HEIGHT, 0)
           << QPoint(0, ARROW_WIDTH/2);
