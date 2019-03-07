@@ -24,14 +24,13 @@
 #define LINE_WIDTH 2
 
 // global nodes
-static std::map<QModelIndex, bool> isAnode;
 
+class DrawBoxDelegate ;
 
 class QTableNodes : public QTableWidget
 {
     Q_OBJECT
 
-private:
     int column_width;
     int row_height;
     bool m_nbMousePressed;
@@ -41,8 +40,8 @@ private:
     QModelIndex drag_index;
     QModelIndex drop_index;
 
+    std::map<QModelIndex, bool> isAnode;
     std :: vector <std::pair<QModelIndex, QModelIndex> > edges;
-    std :: map<QModelIndex, std :: vector<QModelIndex> > nodes;
     void print_edges();
     void print_isAnode();
 
@@ -64,6 +63,7 @@ public:
     explicit QTableNodes(QWidget *parent = 0);
     ~QTableNodes() { }
 
+    std::map<QModelIndex, bool>& get_isAnode() { return isAnode; }
     void fillTable();
     void setHeaderStyle();
 };
@@ -86,7 +86,6 @@ public:
                 pen.setWidth(2);
                 pen.setColor(QColor("#000") );
                 painter->setPen(pen);
-                isAnode[index] = true;
             }
             else
             {
@@ -94,7 +93,6 @@ public:
                 pen.setWidth(1);
                 pen.setColor(QColor("#d8d8d8") );
                 painter->setPen(pen);
-                isAnode[index] = false;
             }
             painter->drawRect( option.rect.topLeft().x(), option.rect.topLeft().y(),
                                option.rect.width(), option.rect.height());

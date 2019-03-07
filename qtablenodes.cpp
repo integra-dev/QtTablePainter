@@ -71,7 +71,7 @@ void QTableNodes::updateNode(QTableWidgetItem* it)
     isAnode[indexFromItem(it)] = it->text().isEmpty() ? false : true;
     for(auto const& isNd : isAnode)
     {
-        for(size_t i = 0; i < edges.size(); i++)
+        for(size_t i = 0; i < edges.size();)
         {
             if(edges[i].first == edges[i].second && isNd.second)    // remove loops (edge=point)
             {
@@ -84,6 +84,10 @@ void QTableNodes::updateNode(QTableWidgetItem* it)
             else if(edges[i].second == isNd.first && (!isAnode[edges[i].first] || !isAnode[edges[i].second]) )
             {
                 edges.erase(edges.begin() + i);
+            }
+            else
+            {
+                i++;
             }
         }
     }
@@ -101,15 +105,14 @@ void QTableNodes::mousePressEvent(QMouseEvent *event)
     {
         m_nbMousePressed = true;
         viewport()->setFocus();
-        m_line.setP1(event->pos());
+        QPoint first_point = event->pos();
 
-        QTableWidgetItem* it = itemAt(m_line.p1());
+        QTableWidgetItem* it = itemAt(first_point);
         if(it == nullptr)  return;
         if(!it->text().isEmpty())
         {
-            edges.push_back(std::make_pair(indexAt(m_line.p1()),  // initially line is a point
-                                           indexAt(m_line.p1())
-                                           )
+            edges.push_back(std::make_pair(indexAt(first_point),  // initially line is a point
+                                           indexAt(first_point))
                             );
         }
     }
@@ -127,11 +130,11 @@ void QTableNodes::mouseMoveEvent(QMouseEvent *event)
     {
         if(m_nbMousePressed)
         {
-            m_line.setP2(event->pos());
-            if(itemAt(m_line.p2()) == nullptr)  return;
-            if(!edges.empty() && itemAt(m_line.p2())->text().length() > 0)
+            QPoint second_point = event->pos();
+            if(itemAt(second_point) == nullptr)  return;
+            if(!edges.empty() && itemAt(second_point)->text().length() > 0)
             {
-                edges.back().second = indexAt(m_line.p2());     // updating second vertex
+                edges.back().second = indexAt(second_point);     // updating second vertex
             }
         }
     }
@@ -145,10 +148,10 @@ void QTableNodes::mouseReleaseEvent(QMouseEvent *event)
 
     if(!m_leftButtonPressed)
     {
-        m_line.setP2(event->pos());
+        QPoint second_point = event->pos();
         if (event->type() == QEvent::MouseButtonRelease && event->buttons() && Qt::RightButton)
         {
-            edges.back().second = this->indexAt(m_line.p2());
+            edges.back().second = indexAt(second_point);
         }
     }
     m_nbMousePressed = false;
@@ -165,7 +168,8 @@ void QTableNodes::mouseReleaseEvent(QMouseEvent *event)
 
 void QTableNodes::dragEnterEvent(QDragEnterEvent *event)
 {
-    drag_index = indexAt(event->pos());
+    drag_index = indexFromItem(currentItem());      // not indexAt(event->pos())
+    qDebug() << "DRAG EVENT: " << drag_index;
     event->acceptProposedAction();
 }
 
@@ -185,7 +189,7 @@ void QTableNodes::dropEvent(QDropEvent *event)
     if(m_leftButtonPressed)
     {
         // trying to update edges
-        QModelIndex new_drop_index = drop_index;    //indexAt(event->pos());      // current index to update arrows
+        QModelIndex new_drop_index = drop_index;     // current index to update arrows
 
         for(size_t i = 0; i < edges.size(); i++)      // tracking all items to update edges
         {
@@ -202,7 +206,7 @@ void QTableNodes::dropEvent(QDropEvent *event)
         // removing not actual edges
         for(auto const& isNd : isAnode)
         {
-            for(size_t i = 0; i < edges.size(); i++)
+            for(size_t i = 0; i < edges.size();)
             {
                 if(edges[i].first == edges[i].second && isNd.second)    // remove loops (edge=point)
                 {
@@ -211,6 +215,10 @@ void QTableNodes::dropEvent(QDropEvent *event)
                 else if(edges[i].first == isNd.first && (!isAnode[edges[i].first] || !isAnode[edges[i].second]))
                 {
                     edges.erase(edges.begin() + i);
+                }
+                else
+                {
+                     i++;
                 }
             }
         }
